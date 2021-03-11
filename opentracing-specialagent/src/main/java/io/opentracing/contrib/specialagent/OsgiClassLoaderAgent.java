@@ -91,6 +91,8 @@ public class OsgiClassLoaderAgent {
 	public static class LoadClassAdvice {
 		@Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
 		public static Class<?> onEnter(@Advice.Argument(0) String name, @Advice.This ClassLoader injectedOn) {
+			ClassLoaderLogger.log(injectedOn, "Enter LoadClass for " + name);
+			ClassLoaderLogger.dumpHierarchy(injectedOn);
 			// need to use call depth here to prevent re-entry from call to Class.forName() below
 			// because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
 			// Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
@@ -113,6 +115,7 @@ public class OsgiClassLoaderAgent {
 					//				for (String prefix : Holder.bootstrapPackagesPrefixes) {
 					if (name.startsWith("io.opentracing")) {
 						writer.println("Thread is " + Thread.currentThread());
+						ClassLoaderLogger.log(injectedOn, "Thread is " + Thread.currentThread());
 
 						try {
 							Class a = Class.forName(name, false, null);
@@ -121,12 +124,18 @@ public class OsgiClassLoaderAgent {
 							writer.println("Boot loader failed");
 						}
 
+						ClassLoaderLogger.log(injectedOn, "Determining hierarchy for bootproxy");
+						ClassLoaderLogger.dumpHierarchy(BootProxyClassLoader.INSTANCE);
+
 						try {
 							Class b = Class.forName(name, false, BootProxyClassLoader.INSTANCE);
 							writer.println(BootProxyClassLoader.INSTANCE + " found: " + b);
 						} catch (ClassNotFoundException ignored) {
 							writer.println(BootProxyClassLoader.INSTANCE + " failed");
 						}
+
+						ClassLoaderLogger.log(injectedOn, "Determining hierarchy for SpecialAgent");
+						ClassLoaderLogger.dumpHierarchy(SpecialAgent.class.getClassLoader());
 
 						try {
 							Class c = Class.forName(name, false, SpecialAgent.class.getClassLoader());
@@ -144,6 +153,9 @@ public class OsgiClassLoaderAgent {
 						} catch (ClassNotFoundException ignored) {
 							writer.println("Parent classloader failed");
 						}
+
+						ClassLoaderLogger.log(injectedOn, "Determining hierarchy for ContextClassLoader");
+						ClassLoaderLogger.dumpHierarchy(Thread.currentThread().getContextClassLoader());
 
 						try {
 							Class e = Class.forName(name, false, Thread.currentThread().getContextClassLoader());
@@ -180,14 +192,19 @@ public class OsgiClassLoaderAgent {
 				e.printStackTrace();
 			}
 
+			ClassLoaderLogger.log(injectedOn, "Could not find " + name);
 			return null;
 		}
 
 		@Advice.OnMethodExit(onThrowable = Throwable.class)
 		public static void onExit(
 				@Advice.Return(readOnly = false) Class<?> result,
-				@Advice.Enter Class<?> resultFromBootstrapLoader) {
+				@Advice.Enter Class<?> resultFromBootstrapLoader,
+				@Advice.This ClassLoader injectedOn,
+				@Advice.Argument(0) String name) {
+			ClassLoaderLogger.log(injectedOn, "Exit LoadClass for " + name);
 			if (resultFromBootstrapLoader != null) {
+				ClassLoaderLogger.log(injectedOn, "Result from fallback was " + resultFromBootstrapLoader);
 				result = resultFromBootstrapLoader;
 			}
 		}

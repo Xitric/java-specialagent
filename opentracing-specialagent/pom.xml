@@ -497,6 +497,12 @@
           <version>${project.version}</version>
           <optional>true</optional>
           <scope>provided</scope>
+        </dependency><dependency>
+          <groupId>io.opentracing.contrib.specialagent.rule</groupId>
+          <artifactId>websphere-85-module-artifact</artifactId>
+          <version>${project.version}</version>
+          <optional>true</optional>
+          <scope>provided</scope>
         </dependency>
       </dependencies>
     </profile>

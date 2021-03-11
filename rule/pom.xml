@@ -98,6 +98,7 @@
         <module>dynamic</module>
         <module>cxf</module>
         <module>quartz</module>
+        <module>websphere-8.5-module-artifact</module>
       </modules>
       <build>
         <resources>

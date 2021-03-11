@@ -12,5 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-io.opentracing.contrib.specialagent.rule.mule4.module.artifact.ClassLoaderRule
-io.opentracing.contrib.specialagent.rule.mule4.module.artifact.FineGrainedControlClassLoaderRule
+io.opentracing.contrib.specialagent.rule.websphere85.module.artifact.ClassLoaderRule

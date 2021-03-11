@@ -28,6 +28,7 @@ import io.opentracing.contrib.specialagent.DefaultAgentRule.DefaultLevel;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.TypeConstantAdjustment;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType.Builder;
@@ -53,6 +54,7 @@ public class ClassLoaderAgent {
         @Override
         public Builder<?> transform(final Builder<?> builder, final TypeDescription typeDescription, final ClassLoader classLoader, final JavaModule module) {
           return builder
+            .visit(TypeConstantAdjustment.INSTANCE)
             .visit((locatorProxy != null ? Advice.to(DefineClass.class, locatorProxy) : Advice.to(DefineClass.class)).on(named("defineClass").and(returns(Class.class).and(takesArgument(0, String.class)))))
             .visit((locatorProxy != null ? Advice.to(LoadClass.class, locatorProxy) : Advice.to(LoadClass.class)).on(named("loadClass").and(returns(Class.class).and(takesArguments(String.class)))))
             .visit((locatorProxy != null ? Advice.to(FindResource.class, locatorProxy) : Advice.to(FindResource.class)).on(named("findResource").and(returns(URL.class).and(takesArguments(String.class)))))
@@ -70,10 +72,20 @@ public class ClassLoaderAgent {
   }
 
   public static class DefineClass {
+    @Advice.OnMethodEnter
+    public static void enter(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String name) {
+      ClassLoaderLogger.log(thiz, "Enter DefineClass for " + name);
+      ClassLoaderLogger.dumpHierarchy(thiz);
+    }
+
     @Advice.OnMethodExit
-    public static void exit(final @Advice.This ClassLoader thiz) {
-      if (!isExcluded(thiz))
+    public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String name) {
+      ClassLoaderLogger.log(thiz, "Exit DefineClass for " + name);
+      if (!isExcluded(thiz)) {
+        ClassLoaderLogger.log(thiz, "Start injecting rule classes into me");
         SpecialAgent.inject(thiz);
+        ClassLoaderLogger.log(thiz, "Done injecting rule classes into me");
+      }
     }
   }
 
@@ -81,9 +93,16 @@ public class ClassLoaderAgent {
     public static final BootLoaderAgent.Mutex mutex = new BootLoaderAgent.Mutex();
     public static Method defineClass;
 
+    @Advice.OnMethodEnter
+    public static void enter(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String name) {
+      ClassLoaderLogger.log(thiz, "Enter LoadClass for " + name);
+      ClassLoaderLogger.dumpHierarchy(thiz);
+    }
+
     @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = ClassNotFoundException.class)
     public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String name, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) Class<?> returned, @Advice.Thrown(readOnly = false, typing = Typing.DYNAMIC) ClassNotFoundException thrown) {
+      ClassLoaderLogger.log(thiz, "Exit LoadClass for " + name + ", found " + returned);
       if (returned != null || isExcluded(thiz))
         return;
 
@@ -92,7 +111,9 @@ public class ClassLoaderAgent {
         return;
 
       try {
+        ClassLoaderLogger.log(thiz, "Could not find in vanilla, fallback to BootProxy");
         final Class<?> bootstrapClass = BootProxyClassLoader.INSTANCE.loadClassOrNull(name, false);
+        ClassLoaderLogger.log(thiz, "BootProxy found " + bootstrapClass);
         if (bootstrapClass != null) {
 //          log(">>>>>>>> BootLoader#loadClassOrNull(\"" + name + "\"): " + bootstrapClass, null, DefaultLevel.FINEST);
 
@@ -101,9 +122,12 @@ public class ClassLoaderAgent {
           return;
         }
 
+        ClassLoaderLogger.log(thiz, "BootProxy failed, so fallback to SpecialAgent.findClass");
         final byte[] bytecode = SpecialAgent.findClass(thiz, name);
-        if (bytecode == null)
+        if (bytecode == null) {
+          ClassLoaderLogger.log(thiz, "Even SpecialAgent failed, fuck?!");
           return;
+        }
 
 //        log("<<<<<<<< defineClass(\"" + name + "\")", null, DefaultLevel.FINEST);
 
@@ -111,6 +135,7 @@ public class ClassLoaderAgent {
           defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class, ProtectionDomain.class);
 
         returned = (Class<?>)defineClass.invoke(thiz, name, bytecode, 0, bytecode.length, null);
+        ClassLoaderLogger.log(thiz, "Fallback to DefineClass, found " + returned);
         thrown = null;
       }
       catch (final Throwable t) {
