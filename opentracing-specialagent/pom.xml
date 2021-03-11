@@ -99,13 +99,13 @@
           <optional>true</optional>
           <scope>provided</scope>
         </dependency>
-        <dependency>
+        <!-- <dependency>
           <groupId>io.opentracing.contrib.specialagent.rule</groupId>
           <artifactId>jdbc</artifactId>
           <version>${project.version}</version>
           <optional>true</optional>
           <scope>provided</scope>
-        </dependency>
+        </dependency> -->
         <dependency>
           <groupId>io.opentracing.contrib.specialagent.rule</groupId>
           <artifactId>concurrent</artifactId>
@@ -494,12 +494,6 @@
         <dependency>
           <groupId>io.opentracing.contrib.specialagent.rule</groupId>
           <artifactId>quartz</artifactId>
-          <version>${project.version}</version>
-          <optional>true</optional>
-          <scope>provided</scope>
-        </dependency><dependency>
-          <groupId>io.opentracing.contrib.specialagent.rule</groupId>
-          <artifactId>websphere-85-module-artifact</artifactId>
           <version>${project.version}</version>
           <optional>true</optional>
           <scope>provided</scope>
