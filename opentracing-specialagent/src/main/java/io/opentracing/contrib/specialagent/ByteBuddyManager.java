@@ -135,7 +135,16 @@ public class ByteBuddyManager extends Manager {
               continue;
             }
 
-            final Class<?> agentClass = pluginsClassLoader.loadClass(line);
+            Class<?> agentClass;
+            try {
+              agentClass = pluginsClassLoader.loadClass(line);
+            } catch (final UnsupportedClassVersionError e) {
+              if (logger.isLoggable(Level.FINE))
+                logger.fine("Skipping rule " + line + " due to incompatible Java version");
+
+              continue;
+            }
+
             if (!AgentRule.class.isAssignableFrom(agentClass)) {
               logger.severe("Class " + agentClass.getName() + " does not implement " + AgentRule.class);
               continue;
@@ -178,7 +187,7 @@ public class ByteBuddyManager extends Manager {
           integrationRules.add(new IntegrationRule(pluginManifest, deferrers, agentRules));
       }
     }
-    catch (final UnsupportedClassVersionError | InvocationTargetException e) {
+    catch (final InvocationTargetException e) {
       logger.log(Level.SEVERE, "Error initliaizing rule: " + agentRule, e);
     }
     catch (final InstantiationException e) {

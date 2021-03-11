@@ -49,7 +49,8 @@ class ClassLoaderMap<T> extends ConcurrentHashMap<ClassLoader,T> {
       return value;
 
     final URLClassLoader classLoader = (URLClassLoader)key;
-    return classLoader.getURLs().length > 0 || classLoader.getParent() != null ? null : super.get(NULL);
+    return classLoader.getURLs() != null && classLoader.getURLs().length > 0 || classLoader.getParent() != null ? null : super.get(NULL);
+    // return classLoader.getURLs().length > 0 || classLoader.getParent() != null ? null : super.get(NULL);
   }
 
   @Override
