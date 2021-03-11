@@ -16,6 +16,8 @@
 package io.opentracing.contrib.specialagent;
 
 import static io.opentracing.contrib.specialagent.Constants.*;
+import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,9 @@ import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
 import com.sun.tools.attach.VirtualMachine;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * The SpecialAgent.
@@ -67,6 +72,34 @@ public class SpecialAgent {
 
   static {
     SpecialAgentUtil.assertJavaAgentJarName();
+  }
+
+  // See: https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/f94fabe07fea4f61141be1471bc9ddafd2c231e2/javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/bytebuddy/AgentLocationStrategy.java#L20
+  private static final AgentBuilder.LocationStrategy bootFallbackLocationStrategy = new AgentBuilder.LocationStrategy() {
+    @Override
+    public ClassFileLocator classFileLocator(ClassLoader classLoader, JavaModule javaModule) {
+      List<ClassFileLocator> locators = new ArrayList<>();
+      locators.add(ClassFileLocator.ForClassLoader.of(BootProxyClassLoader.INSTANCE));
+      while (classLoader != null) {
+        locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));
+        classLoader = classLoader.getParent();
+      }
+      return new ClassFileLocator.Compound(locators.toArray(new ClassFileLocator[0]));
+    }
+  };
+
+  private static AgentBuilder newBuilder() {
+    // Prepare the builder to be used to implement transformations in AgentRule(s)
+    AgentBuilder agentBuilder = new AgentBuilder.Default();
+    if (Adapter.tracerClassLoader != null)
+      agentBuilder = agentBuilder.ignore(any(), is(Adapter.tracerClassLoader));
+
+    return agentBuilder
+            .disableClassFormatChanges()
+            .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+            .with(new ClassLoadListener())
+            .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
+            .with(bootFallbackLocationStrategy);
   }
 
   public static void main(final String[] args) throws Exception {
@@ -167,6 +200,9 @@ public class SpecialAgent {
     // Finally, load the Integration Rules and Trace Exporters with the
     // provided `Manager`.
     load(instrumenter.manager, ruleFiles, isoClassLoader);
+
+    // Additionally, load OsgiClassLoaderAgent
+    OsgiClassLoaderAgent.premain(newBuilder()).installOn(inst);
 
     final long startupTime = (System.currentTimeMillis() - startTime) / 10;
     if (logger.isLoggable(Level.FINE))
@@ -671,6 +707,7 @@ public class SpecialAgent {
     // Check if the class loader matches a ruleClassLoader
     List<RuleClassLoader> ruleClassLoaders;
     for (ClassLoader contextLoader = targetLoader; contextLoader != null; contextLoader = contextLoader.getParent()) {
+      //      logger.info("Context loader: " + AssembleUtil.getNameId(contextLoader));
       ruleClassLoaders = classLoaderToRuleClassLoader.get(contextLoader);
       if (ruleClassLoaders != null) {
         final R r = function.apply(targetLoader, name, ruleClassLoaders, contextLoader);
@@ -679,6 +716,7 @@ public class SpecialAgent {
       }
     }
 
+    //    logger.severe("Unable to locate " + name);
     return null;
   }
 

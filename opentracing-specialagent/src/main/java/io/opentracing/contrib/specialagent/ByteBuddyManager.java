@@ -57,7 +57,7 @@ public class ByteBuddyManager extends Manager {
   private static final AgentBuilder.LocationStrategy bootFallbackLocationStrategy = new AgentBuilder.LocationStrategy() {
     @Override
     public ClassFileLocator classFileLocator(final ClassLoader classLoader, final JavaModule module) {
-      return new ClassFileLocator.Compound(ClassFileLocator.ForClassLoader.of(classLoader), ClassFileLocator.ForClassLoader.ofBootLoader());
+      return new ClassFileLocator.Compound(ClassFileLocator.ForClassLoader.ofBootLoader(), ClassFileLocator.ForClassLoader.of(classLoader));
     }
   };
 
@@ -70,12 +70,16 @@ public class ByteBuddyManager extends Manager {
       agentBuilder = agentBuilder.ignore(any(), is(Adapter.tracerClassLoader));
 
     agentBuilder = agentBuilder
-      .ignore(nameStartsWith("net.bytebuddy.").or(nameStartsWith("sun.reflect.")).or(isSynthetic()), any(), any())
-      .disableClassFormatChanges()
-      .with(RedefinitionStrategy.RETRANSFORMATION)
-      .with(InitializationStrategy.NoOp.INSTANCE)
-      .with(TypeStrategy.Default.REDEFINE)
-      .with(bootFallbackLocationStrategy);
+            .ignore(nameStartsWith("net.bytebuddy.")
+                    .or(nameStartsWith("sun.reflect."))
+                    .or(nameStartsWith("com.ibm."))
+                    .or(nameStartsWith("org.eclipse.osgi.framework"))
+                    .or(isSynthetic()), any(), any())
+            .disableClassFormatChanges()
+            .with(RedefinitionStrategy.RETRANSFORMATION)
+            .with(InitializationStrategy.NoOp.INSTANCE)
+            .with(TypeStrategy.Default.REDEFINE)
+            .with(bootFallbackLocationStrategy);
 
     if (inst == null)
       return agentBuilder;
@@ -210,6 +214,9 @@ public class ByteBuddyManager extends Manager {
 
     // Load ClassLoaderAgent
     ClassLoaderAgent.premain(newBuilder(null, null, null)).installOn(inst);
+
+    // Additionally, load OsgiClassLoaderAgent
+    OsgiClassLoaderAgent.premain(newBuilder(null, null, null)).installOn(inst);
 
     // Load TracerExclusionAgent
     final AgentBuilder builder = TracerExclusionAgent.premain(tracerExcludedClasses, newBuilder(null, null, null));
