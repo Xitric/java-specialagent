@@ -202,7 +202,7 @@ public class SpecialAgent {
     load(instrumenter.manager, ruleFiles, isoClassLoader);
 
     // Additionally, load OsgiClassLoaderAgent
-    OsgiClassLoaderAgent.premain(newBuilder()).installOn(inst);
+//    OsgiClassLoaderAgent.premain(newBuilder()).installOn(inst);
 
     final long startupTime = (System.currentTimeMillis() - startTime) / 10;
     if (logger.isLoggable(Level.FINE))

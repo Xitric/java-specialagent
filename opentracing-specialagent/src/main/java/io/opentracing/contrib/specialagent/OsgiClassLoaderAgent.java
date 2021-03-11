@@ -6,12 +6,15 @@ import net.bytebuddy.asm.TypeConstantAdjustment;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -196,16 +199,36 @@ public class OsgiClassLoaderAgent {
 			return null;
 		}
 
+		public static Method defineClass;
+
 		@Advice.OnMethodExit(onThrowable = Throwable.class)
 		public static void onExit(
 				@Advice.Return(readOnly = false) Class<?> result,
 				@Advice.Enter Class<?> resultFromBootstrapLoader,
 				@Advice.This ClassLoader injectedOn,
-				@Advice.Argument(0) String name) {
+				@Advice.Argument(0) String name,
+				@Advice.Thrown(readOnly = false, typing = Assigner.Typing.DYNAMIC) ClassNotFoundException thrown) {
 			ClassLoaderLogger.log(injectedOn, "Exit LoadClass for " + name);
+			ClassLoaderLogger.log(injectedOn, "Result from fallback was " + resultFromBootstrapLoader);
 			if (resultFromBootstrapLoader != null) {
-				ClassLoaderLogger.log(injectedOn, "Result from fallback was " + resultFromBootstrapLoader);
 				result = resultFromBootstrapLoader;
+			} else {
+				try {
+					final byte[] bytecode = SpecialAgent.findClass(injectedOn, name);
+					if (bytecode == null) {
+						ClassLoaderLogger.log(injectedOn, "Even SpecialAgent failed, fuck?!");
+						return;
+					}
+
+					if (defineClass == null)
+						defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class, ProtectionDomain.class);
+
+					result = (Class<?>)defineClass.invoke(injectedOn, name, bytecode, 0, bytecode.length, null);
+					ClassLoaderLogger.log(injectedOn, "Fallback to DefineClass, found " + result);
+					thrown = null;
+				} catch (Throwable t) {
+					ClassLoaderLogger.log(injectedOn, "Oh, something terrible happened while invoking SpecialAgent for bytecode");
+				}
 			}
 		}
 	}

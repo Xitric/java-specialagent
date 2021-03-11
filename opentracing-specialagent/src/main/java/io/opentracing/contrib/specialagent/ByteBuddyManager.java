@@ -63,23 +63,36 @@ public class ByteBuddyManager extends Manager {
 
   private TransformationListener transformationListener;
 
-  private AgentBuilder newBuilder(final Instrumentation inst, final PluginManifest pluginManifest, final Event[] events) {
+  private AgentBuilder newBuilder(final Instrumentation inst, final PluginManifest pluginManifest, final Event[] events, boolean forRules) {
     // Prepare the builder to be used to implement transformations in AgentRule(s)
     AgentBuilder agentBuilder = new Default(byteBuddy);
     if (Adapter.tracerClassLoader != null)
       agentBuilder = agentBuilder.ignore(any(), is(Adapter.tracerClassLoader));
 
-    agentBuilder = agentBuilder
-            .ignore(nameStartsWith("net.bytebuddy.")
-                    .or(nameStartsWith("sun.reflect."))
-                    .or(nameStartsWith("com.ibm."))
-                    .or(nameStartsWith("org.eclipse.osgi.framework"))
-                    .or(isSynthetic()), any(), any())
-            .disableClassFormatChanges()
-            .with(RedefinitionStrategy.RETRANSFORMATION)
-            .with(InitializationStrategy.NoOp.INSTANCE)
-            .with(TypeStrategy.Default.REDEFINE)
-            .with(bootFallbackLocationStrategy);
+    if (forRules) {
+      agentBuilder = agentBuilder
+              .ignore(nameStartsWith("net.bytebuddy.")
+                      .or(nameStartsWith("sun.reflect."))
+                      .or(nameStartsWith("com.ibm."))
+                      .or(nameStartsWith("org.eclipse.osgi.framework"))
+                      .or(isSynthetic()), any(), any())
+              .disableClassFormatChanges()
+              .with(RedefinitionStrategy.RETRANSFORMATION)
+              .with(InitializationStrategy.NoOp.INSTANCE)
+              .with(TypeStrategy.Default.REDEFINE)
+              .with(bootFallbackLocationStrategy);
+    } else {
+      agentBuilder = agentBuilder
+              .ignore(nameStartsWith("net.bytebuddy.")
+                      .or(nameStartsWith("sun.reflect."))
+                      .or(isSynthetic()), any(), any())
+              .disableClassFormatChanges()
+              .with(RedefinitionStrategy.RETRANSFORMATION)
+              .with(new ClassLoadListener())
+              .with(InitializationStrategy.NoOp.INSTANCE)
+              .with(TypeStrategy.Default.REDEFINE)
+              .with(bootFallbackLocationStrategy);
+    }
 
     if (inst == null)
       return agentBuilder;
@@ -213,13 +226,13 @@ public class ByteBuddyManager extends Manager {
     loadedDefaultRules = true;
 
     // Load ClassLoaderAgent
-    ClassLoaderAgent.premain(newBuilder(null, null, null)).installOn(inst);
+    ClassLoaderAgent.premain(newBuilder(null, null, null, false)).installOn(inst);
 
     // Additionally, load OsgiClassLoaderAgent
-    OsgiClassLoaderAgent.premain(newBuilder(null, null, null)).installOn(inst);
+    OsgiClassLoaderAgent.premain(newBuilder(null, null, null, false)).installOn(inst);
 
     // Load TracerExclusionAgent
-    final AgentBuilder builder = TracerExclusionAgent.premain(tracerExcludedClasses, newBuilder(null, null, null));
+    final AgentBuilder builder = TracerExclusionAgent.premain(tracerExcludedClasses, newBuilder(null, null, null, false));
     if (builder != null)
       builder.installOn(inst);
   }
@@ -231,8 +244,8 @@ public class ByteBuddyManager extends Manager {
 
     boolean hasGlobal1 = false;
     boolean hasGlobal2 = false;
-    AgentBuilder chainedGlobalBuilder1 = newBuilder(inst, null, events);
-    AgentBuilder chainedGlobalBuilder2 = newBuilder(inst, null, events);
+    AgentBuilder chainedGlobalBuilder1 = newBuilder(inst, null, events, true);
+    AgentBuilder chainedGlobalBuilder2 = newBuilder(inst, null, events, true);
 
     // Load the rest of the specified rules
     if (integrationRules != null) {
@@ -241,12 +254,12 @@ public class ByteBuddyManager extends Manager {
         if (agentRules != null) {
           boolean hasLocal1 = false;
           boolean hasLocal2 = false;
-          AgentBuilder chainedLocalBuilder1 = newBuilder(inst, null, events);
-          AgentBuilder chainedLocalBuilder2 = newBuilder(inst, null, events);
+          AgentBuilder chainedLocalBuilder1 = newBuilder(inst, null, events, true);
+          AgentBuilder chainedLocalBuilder2 = newBuilder(inst, null, events, true);
           for (final AgentRule agentRule : agentRules) {
             loadedRules.add(agentRule.getClass().getName());
             try {
-              final AgentBuilder[] unchainedBuilders = agentRule.buildAgentUnchained(newBuilder(inst, integrationRule.getPluginManifest(), events));
+              final AgentBuilder[] unchainedBuilders = agentRule.buildAgentUnchained(newBuilder(inst, integrationRule.getPluginManifest(), events, true));
               if (unchainedBuilders != null)
                 for (final AgentBuilder unchainedBuilder : unchainedBuilders)
                   unchainedBuilder.installOn(inst);
