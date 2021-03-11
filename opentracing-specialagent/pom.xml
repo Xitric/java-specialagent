@@ -52,13 +52,13 @@
                   <goal>assemble</goal>
                 </goals>
               </execution>
-              <execution>
+              <!-- <execution>
                 <id>verify</id>
                 <goals>
                   <goal>verify</goal>
                 </goals>
                 <phase>prepare-package</phase>
-              </execution>
+              </execution> -->
             </executions>
           </plugin>
           <plugin>
@@ -771,7 +771,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <executions>
-          <execution>
+          <!-- <execution>
             <id>integration-test</id>
             <goals>
               <goal>integration-test</goal>
@@ -787,7 +787,7 @@
                 <include>io/opentracing/contrib/specialagent/**/*IntegrationTestCase</include>
               </includes>
             </configuration>
-          </execution>
+          </execution> -->
         </executions>
         <configuration>
           <excludes>
