@@ -152,6 +152,8 @@ public class ClassLoaderAgent {
 
     @Advice.OnMethodExit
     public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String name, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) URL returned) {
+      ClassLoaderLogger.log(thiz, "Exit FindResource for " + name + ", found " + returned);
+      ClassLoaderLogger.dumpHierarchy(thiz);
       if (returned != null || isExcluded(thiz))
         return;
 
@@ -161,6 +163,7 @@ public class ClassLoaderAgent {
 
       try {
         final URL resource = SpecialAgent.findResource(thiz, name);
+        ClassLoaderLogger.log(thiz, "Looking in SpecialAgent.findResource(), found " + resource);
         if (resource != null)
           returned = resource;
       }
@@ -178,6 +181,8 @@ public class ClassLoaderAgent {
 
     @Advice.OnMethodExit
     public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String name, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) Enumeration<URL> returned) {
+      ClassLoaderLogger.log(thiz, "Exit FindResources for " + name + ", found " + returned);
+      ClassLoaderLogger.dumpHierarchy(thiz);
       if (isExcluded(thiz))
         return;
 
@@ -187,6 +192,7 @@ public class ClassLoaderAgent {
 
       try {
         final Enumeration<URL> resources = SpecialAgent.findResources(thiz, name);
+        ClassLoaderLogger.log(thiz, "Looking in SpecialAgent.findResource(), found " + resources);
         if (resources != null)
           returned = returned == null ? resources : new CompoundEnumeration<>(returned, resources);
       }

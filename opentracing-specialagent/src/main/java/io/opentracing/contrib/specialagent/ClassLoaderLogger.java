@@ -13,34 +13,34 @@ public class ClassLoaderLogger {
 		return loader != null ? loader.getClass().getName() + "@" + Integer.toString(System.identityHashCode(loader), 16) : "null";
 	}
 
-	public static void log(String msg) {
+	public static synchronized void log(String msg) {
 		log(null, msg, null);
 	}
 
-	public static void log(ClassLoader loader, String msg) {
+	public static synchronized void log(ClassLoader loader, String msg) {
 		log(loader, msg, null);
 	}
 
-	public static void log(ClassLoader loader, String msg, Throwable t) {
-		try (PrintWriter writer = new PrintWriter(
-				new FileWriter("C:\\Users\\Kasper\\Desktop\\classloader-log.txt", true)
-		)) {
-			writer.println("[" + toName(loader) + "]: " + msg);
+	public static synchronized void log(ClassLoader loader, String msg, Throwable t) {
+		// try (PrintWriter writer = new PrintWriter(
+		// 		new FileWriter("C:\\Users\\Kasper\\Desktop\\classloader-log.txt", true)
+		// )) {
+		// 	writer.println("[" + Thread.currentThread().getName() + ", " + toName(loader) + "]: " + msg);
 
-			if (t != null) {
-				writer.println(t.toString());
-				t.printStackTrace(writer);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		// 	if (t != null) {
+		// 		writer.println(t.toString());
+		// 		t.printStackTrace(writer);
+		// 	}
+		// } catch (IOException e) {
+		// 	e.printStackTrace();
+		// }
 	}
 
-	public static void dumpHierarchy(ClassLoader loader) {
-		String loaderList = "Hierarchy is ";
-		for (ClassLoader current = loader; current != null; current = current.getParent()) {
-			loaderList += toName(current) + (current.getParent() == null ? "" : " -> ");
-		}
-		log(loader, loaderList);
+	public static synchronized void dumpHierarchy(ClassLoader loader) {
+		// String loaderList = "Hierarchy is ";
+		// for (ClassLoader current = loader; current != null; current = current.getParent()) {
+		// 	loaderList += toName(current) + (current.getParent() == null ? "" : " -> ");
+		// }
+		// log(loader, loaderList);
 	}
 }

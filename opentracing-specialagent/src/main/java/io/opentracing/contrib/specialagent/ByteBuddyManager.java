@@ -88,7 +88,7 @@ public class ByteBuddyManager extends Manager {
                       .or(isSynthetic()), any(), any())
               .disableClassFormatChanges()
               .with(RedefinitionStrategy.RETRANSFORMATION)
-              .with(new ClassLoadListener())
+            //   .with(new ClassLoadListener())
               .with(InitializationStrategy.NoOp.INSTANCE)
               .with(TypeStrategy.Default.REDEFINE)
               .with(bootFallbackLocationStrategy);
