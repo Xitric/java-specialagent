@@ -25,7 +25,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 public class OsgiClassLoaderAgent {
 
 	private static final String CLASS_LOADER_NAME = "osgi";
-	private static final String SPECIAL_AGENT_NAMESPACE = "io.opentracing.contrib.specialagent.rule";
+	private static final String SPECIAL_AGENT_NAMESPACE = "io.opentracing";
 
 	public static AgentBuilder premain(final AgentBuilder builder) {
 		log("\n<<<<<<<<<<<<<<<<< Installing OsgiClassLoaderAgent >>>>>>>>>>>>>>>>>>\n", null, DefaultAgentRule.DefaultLevel.FINE);
@@ -46,8 +46,9 @@ public class OsgiClassLoaderAgent {
 											named("loadClass").and(
 													takesArguments(2)
 															.and(takesArgument(0, String.class))
-															.and(takesArgument(1, Boolean.class)))
-													.and(returns(Class.class).and(isPublic().or(isProtected())))
+															.and(takesArgument(1, named("boolean"))))
+													.and(returns(Class.class))
+                                                    .and(isProtected())
 											)
 									);
 						}
@@ -64,7 +65,7 @@ public class OsgiClassLoaderAgent {
 		public static void onExit(
 				final @Advice.This ClassLoader thiz,
 				final @Advice.Argument(0) String name,
-				final @Advice.Argument(1) Boolean resolve,
+				final @Advice.Argument(1) boolean resolve,
 				@Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Class<?> result,
 				@Advice.Thrown(readOnly = false, typing = Typing.DYNAMIC) ClassNotFoundException thrown) {
 
