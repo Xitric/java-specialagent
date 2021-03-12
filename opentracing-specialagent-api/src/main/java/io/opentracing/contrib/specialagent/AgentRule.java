@@ -104,31 +104,7 @@ public abstract class AgentRule {
 
   private static boolean initialized;
 
-  private static final InheritableThreadLocal<Boolean> isThreadInstrumentable = new InheritableThreadLocal<Boolean>() {
-    @Override
-    protected Boolean childValue(Boolean parentValue) {
-      if (parentValue == null) {
-        logger.warning("Unknown instrumentable state for parent of thread: " + Thread.currentThread().getName());
-        parentValue = Boolean.TRUE;
-      }
-
-      if (!parentValue || Adapter.tracerClassLoader == null)
-        return parentValue;
-
-      return !AgentRuleUtil.isFromClassLoader(AgentRuleUtil.getExecutionStack(), Adapter.tracerClassLoader);
-    }
-
-    @Override
-    public Boolean get() {
-      Boolean state = super.get();
-      if (state == null) {
-        logger.warning("Unknown instrumentable state for thread: " + Thread.currentThread().getName());
-        set(state = Boolean.TRUE);
-      }
-
-      return state;
-    }
-  };
+  public static final InheritableThreadLocal<Boolean> isThreadInstrumentable = new IsThreadInstrumentable();
 
   private static final Logger logger = Logger.getLogger(AgentRule.class);
   private static final ThreadLocalCounter entryCounter = new ThreadLocalCounter();
