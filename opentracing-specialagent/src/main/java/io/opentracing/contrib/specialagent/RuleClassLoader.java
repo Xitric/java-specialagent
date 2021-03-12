@@ -149,16 +149,6 @@ class RuleClassLoader extends URLClassLoader {
     if (classLoader == null)
       classLoader = BootProxyClassLoader.INSTANCE;
 
-    if (logger.isLoggable(Level.FINE))
-        logger.fine("Considering integration with \"" + pluginManifest.name + "\"");
-
-    if (pluginManifest.name.contains("websphere")) {
-        if (logger.isLoggable(Level.FINE))
-            logger.fine("Allowing integration with \"" + pluginManifest.name + "\" due to \" it being websphere");
-
-        return true;
-    }
-
     Boolean compatible = compatibility.get(classLoader);
     if (compatible != null)
       return compatible;

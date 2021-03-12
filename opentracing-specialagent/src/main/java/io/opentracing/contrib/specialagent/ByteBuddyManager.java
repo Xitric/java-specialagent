@@ -57,7 +57,7 @@ public class ByteBuddyManager extends Manager {
   private static final AgentBuilder.LocationStrategy bootFallbackLocationStrategy = new AgentBuilder.LocationStrategy() {
     @Override
     public ClassFileLocator classFileLocator(final ClassLoader classLoader, final JavaModule module) {
-      return new ClassFileLocator.Compound(ClassFileLocator.ForClassLoader.ofBootLoader(), ClassFileLocator.ForClassLoader.of(classLoader));
+      return new ClassFileLocator.Compound(ClassFileLocator.ForClassLoader.of(classLoader), ClassFileLocator.ForClassLoader.ofBootLoader());
     }
   };
 
@@ -75,24 +75,20 @@ public class ByteBuddyManager extends Manager {
                       .or(nameStartsWith("sun.reflect."))
                       .or(nameStartsWith("com.ibm."))
                       .or(nameStartsWith("org.eclipse.osgi.framework"))
-                      .or(isSynthetic()), any(), any())
-              .disableClassFormatChanges()
-              .with(RedefinitionStrategy.RETRANSFORMATION)
-              .with(InitializationStrategy.NoOp.INSTANCE)
-              .with(TypeStrategy.Default.REDEFINE)
-              .with(bootFallbackLocationStrategy);
+                      .or(isSynthetic()), any(), any());
     } else {
       agentBuilder = agentBuilder
               .ignore(nameStartsWith("net.bytebuddy.")
                       .or(nameStartsWith("sun.reflect."))
-                      .or(isSynthetic()), any(), any())
+                      .or(isSynthetic()), any(), any());
+    }
+
+    agentBuilder = agentBuilder
               .disableClassFormatChanges()
               .with(RedefinitionStrategy.RETRANSFORMATION)
-            //   .with(new ClassLoadListener())
               .with(InitializationStrategy.NoOp.INSTANCE)
               .with(TypeStrategy.Default.REDEFINE)
               .with(bootFallbackLocationStrategy);
-    }
 
     if (inst == null)
       return agentBuilder;
@@ -228,7 +224,7 @@ public class ByteBuddyManager extends Manager {
     // Load ClassLoaderAgent
     ClassLoaderAgent.premain(newBuilder(null, null, null, false)).installOn(inst);
 
-    // Additionally, load OsgiClassLoaderAgent
+    // Additionally, load OsgiClassLoaderAgent to handle OSGi specific issues
     OsgiClassLoaderAgent.premain(newBuilder(null, null, null, false)).installOn(inst);
 
     // Load TracerExclusionAgent
