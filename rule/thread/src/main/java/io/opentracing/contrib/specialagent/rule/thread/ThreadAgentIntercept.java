@@ -37,6 +37,7 @@ public class ThreadAgentIntercept {
     } else {
       try {
         threadIdToSpan = AgentRuleUtil.getFieldInBootstrapClass(ThreadAgentIntercept.class, "threadIdToSpan");
+        return threadIdToSpan != null;
       } catch (ExceptionInInitializerError e) {
         return false;
       }
