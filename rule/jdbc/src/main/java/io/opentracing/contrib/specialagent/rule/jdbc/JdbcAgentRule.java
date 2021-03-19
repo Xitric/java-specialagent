@@ -30,10 +30,17 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType.Builder;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher.Junction;
+import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
 
 public class JdbcAgentRule extends AgentRule {
-  private final Junction<TypeDescription> driverJunction = named("java.sql.DriverManager").or(hasSuperType(named("java.sql.Driver")).and(not(named("io.opentracing.contrib.jdbc.TracingDriver"))));
+  private final Junction<TypeDescription> driverJunction = named("java.sql.DriverManager").or(
+          hasSuperType(named("java.sql.Driver")).and(
+                  not(named("io.opentracing.contrib.jdbc.TracingDriver")).and(
+                          not(ElementMatchers.nameStartsWith("org.apache.derby.jdbc"))
+                  )
+          )
+  );
 
   @Override
   public AgentBuilder buildAgentChainedGlobal1(final AgentBuilder builder) {

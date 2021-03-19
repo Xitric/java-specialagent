@@ -41,7 +41,7 @@
         <module>spring-boot</module>
         <module>spring-webmvc</module>
         <module>okhttp</module>
-        <!-- <module>jdbc</module> -->
+        <module>jdbc</module>
         <module>concurrent</module>
         <module>httpurlconnection</module>
         <module>servlet</module>

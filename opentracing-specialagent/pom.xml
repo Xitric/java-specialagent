@@ -99,13 +99,13 @@
           <optional>true</optional>
           <scope>provided</scope>
         </dependency>
-        <!-- <dependency>
+        <dependency>
           <groupId>io.opentracing.contrib.specialagent.rule</groupId>
           <artifactId>jdbc</artifactId>
           <version>${project.version}</version>
           <optional>true</optional>
           <scope>provided</scope>
-        </dependency> -->
+        </dependency>
         <dependency>
           <groupId>io.opentracing.contrib.specialagent.rule</groupId>
           <artifactId>concurrent</artifactId>
