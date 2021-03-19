@@ -24,35 +24,49 @@ import io.opentracing.contrib.specialagent.AgentRuleUtil;
 import io.opentracing.util.GlobalTracer;
 
 public class ThreadAgentIntercept {
-  public static final Map<Long,Span> threadIdToSpan;
+  public static Map<Long,Span> threadIdToSpan;
   private static final ThreadLocal<Scope> localScope = new ThreadLocal<>();
 
-  static {
+  private static boolean hasThreadSpanMapping() {
+    if (threadIdToSpan != null) {
+      return true;
+    }
+
     if (ThreadAgentIntercept.class.getClassLoader() == null) {
       threadIdToSpan = new ConcurrentHashMap<>();
+    } else {
+      try {
+        threadIdToSpan = AgentRuleUtil.getFieldInBootstrapClass(ThreadAgentIntercept.class, "threadIdToSpan");
+      } catch (ExceptionInInitializerError e) {
+        return false;
+      }
     }
-    else {
-      threadIdToSpan = AgentRuleUtil.getFieldInBootstrapClass(ThreadAgentIntercept.class, "threadIdToSpan");
-    }
+    return true;
   }
 
   public static void start(final Thread thread) {
-    final Span span = GlobalTracer.get().activeSpan();
-    if (span != null)
-      threadIdToSpan.put(thread.getId(), span);
+    if (hasThreadSpanMapping()) {
+      final Span span = GlobalTracer.get().activeSpan();
+      if (span != null)
+        threadIdToSpan.put(thread.getId(), span);
+    }
   }
 
   public static void runEnter(final Thread thread) {
-    final Span span = threadIdToSpan.get(thread.getId());
-    if (span != null)
-      localScope.set(GlobalTracer.get().activateSpan(span));
+    if (hasThreadSpanMapping()) {
+      final Span span = threadIdToSpan.get(thread.getId());
+      if (span != null)
+        localScope.set(GlobalTracer.get().activateSpan(span));
+    }
   }
 
   @SuppressWarnings("resource")
   public static void runExit(final Thread thread) {
-    threadIdToSpan.remove(thread.getId());
-    final Scope scope = localScope.get();
-    if (scope != null)
-      scope.close();
+    if (hasThreadSpanMapping()) {
+      threadIdToSpan.remove(thread.getId());
+      final Scope scope = localScope.get();
+      if (scope != null)
+        scope.close();
+    }
   }
 }

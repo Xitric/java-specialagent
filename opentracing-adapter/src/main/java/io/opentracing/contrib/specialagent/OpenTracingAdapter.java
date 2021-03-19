@@ -200,7 +200,7 @@ public class OpenTracingAdapter extends Adapter {
 
         // FIXME: This looks like a hack...
         final String tracerResolverUrl = isoClassLoader.getResource("io/opentracing/contrib/tracerresolver/TracerResolver.class").toString();
-        Adapter.tracerClassLoader = new TracerClassLoader(null, tracerUrl, new URL(tracerResolverUrl.substring(4, tracerResolverUrl.indexOf('!'))));
+        Adapter.tracerClassLoader = new TracerClassLoader(ClassLoader.getSystemClassLoader(), tracerUrl, new URL(tracerResolverUrl.substring(4, tracerResolverUrl.indexOf('!'))));
         Thread.currentThread().setContextClassLoader(Adapter.tracerClassLoader);
 
         final Class<?> tracerResolverClass = Class.forName("io.opentracing.contrib.tracerresolver.TracerResolver", true, Adapter.tracerClassLoader);

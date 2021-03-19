@@ -86,6 +86,11 @@ public class ClassLoaderAgent {
     @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = ClassNotFoundException.class)
     public static void exit(final @Advice.This ClassLoader thiz, final @Advice.Argument(0) String name, @Advice.Return(readOnly=false, typing=Typing.DYNAMIC) Class<?> returned, @Advice.Thrown(readOnly = false, typing = Typing.DYNAMIC) ClassNotFoundException thrown) {
+      // Ideally, we should only be messing with class lookups from within the namespace of SpecialAgent
+	  if (!name.startsWith("io.opentracing")) {
+		return;
+	  }
+
       if (returned != null || isExcluded(thiz))
         return;
 
