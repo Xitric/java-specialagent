@@ -7,8 +7,9 @@ public class IsThreadInstrumentable extends InheritableThreadLocal<Boolean> {
             parentValue = Boolean.TRUE;
         }
 
-        if (!parentValue || Adapter.tracerClassLoader == null)
-        return parentValue;
+        if (!parentValue || Adapter.tracerClassLoader == null) {
+            return parentValue;
+        }
 
         return !AgentRuleUtil.isFromClassLoader(AgentRuleUtil.getExecutionStack(), Adapter.tracerClassLoader);
     }
