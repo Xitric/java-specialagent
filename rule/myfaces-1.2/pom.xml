@@ -29,7 +29,8 @@
     <sa.rule.name>myfaces:1.2</sa.rule.name>
     <version.myfaces.min>1.2.0</version.myfaces.min>
     <version.myfaces.max>2.6.7</version.myfaces.max>
-    <passCompatibility>org.apache.myfaces.core:myfaces-impl:[${version.myfaces.min},${version.myfaces.max}]</passCompatibility>
+    <version.servlet.min>2.2</version.servlet.min>
+    <passCompatibility>org.apache.myfaces.core:myfaces-impl:[${version.myfaces.min},${version.myfaces.max}];javax.servlet:javax.servlet-api:[3.0.1,];javax.servlet:servlet-api:[${version.servlet.min},]</passCompatibility>
   </properties>
   <dependencies>
     <dependency>
@@ -44,6 +45,12 @@
       <artifactId>myfaces-impl</artifactId>
       <version>${version.myfaces.min}</version>
       <optional>true</optional>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>${version.servlet.min}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
