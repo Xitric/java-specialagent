@@ -69,18 +69,13 @@ public class ByteBuddyManager extends Manager {
     if (Adapter.tracerClassLoader != null)
       agentBuilder = agentBuilder.ignore(any(), is(Adapter.tracerClassLoader));
 
-    // TODO: Refactor to how it looked originally, now that we have fixed the IBM bugs?
     agentBuilder = agentBuilder
-            .ignore(nameStartsWith("net.bytebuddy.")
-                    .or(nameStartsWith("sun.reflect."))
-                    .or(isSynthetic()), any(), any());
-
-    agentBuilder = agentBuilder
-              .disableClassFormatChanges()
-              .with(RedefinitionStrategy.RETRANSFORMATION)
-              .with(InitializationStrategy.NoOp.INSTANCE)
-              .with(TypeStrategy.Default.REDEFINE)
-              .with(bootFallbackLocationStrategy);
+      .ignore(nameStartsWith("net.bytebuddy.").or(nameStartsWith("sun.reflect.")).or(isSynthetic()), any(), any())
+      .disableClassFormatChanges()
+      .with(RedefinitionStrategy.RETRANSFORMATION)
+      .with(InitializationStrategy.NoOp.INSTANCE)
+      .with(TypeStrategy.Default.REDEFINE)
+      .with(bootFallbackLocationStrategy);
 
     if (inst == null)
       return agentBuilder;
