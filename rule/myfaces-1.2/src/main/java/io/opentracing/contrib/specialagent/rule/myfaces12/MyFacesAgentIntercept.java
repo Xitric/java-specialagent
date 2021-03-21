@@ -13,9 +13,48 @@
  * limitations under the License.
  */
 
-package io.opentracing.contrib.specialagent.rule.myfaces;
+package io.opentracing.contrib.specialagent.rule.myfaces12;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
+
+import javax.faces.event.ActionEvent;
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.util.Arrays;
+
 public class MyFacesAgentIntercept {
 
+	final Tracer tracer = GlobalTracer.get();
+
+	public static void logThatShit(String msg) {
+		try (PrintWriter writer = new PrintWriter(
+				new BufferedOutputStream(
+						new FileOutputStream("C:/Users/Kasper/Desktop/jsflog.txt", true)
+				), true)
+		) {
+			writer.println(msg);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void onProcessActionEnter(Object e) {
+		ActionEvent event = (ActionEvent) e;
+		logThatShit("Intercepted event enter for " + event);
+		logThatShit("\tClass: " + event.getClass());
+		logThatShit("\tPhase id: " + event.getPhaseId().getOrdinal());
+		logThatShit("\tSource: " + event.getSource());
+		logThatShit("\tComponent id: " + event.getComponent().getId());
+		logThatShit("\tComponent family: " + event.getComponent().getFamily());
+		logThatShit("\tComponent renderer: " + event.getComponent().getRendererType());
+		logThatShit("\tComponent attribute keys: " + Arrays.toString(event.getComponent().getAttributes().keySet().toArray()));
+	}
+
+	public static void onProcessActionExit(Object e) {
+		ActionEvent event = (ActionEvent) e;
+		logThatShit("Intercepted event exit for " + event);
+	}
 }
