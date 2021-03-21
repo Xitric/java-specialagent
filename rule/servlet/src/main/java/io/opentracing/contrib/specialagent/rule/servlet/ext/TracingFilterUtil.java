@@ -31,9 +31,13 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 
 public class TracingFilterUtil {
+  public static String getSpanName(final HttpServletRequest httpRequest) {
+    return httpRequest.getMethod() + " " + httpRequest.getRequestURI();
+  }
+
   public static Span buildSpan(final HttpServletRequest httpRequest, final Tracer tracer, final List<ServletFilterSpanDecorator> spanDecorators) {
     final SpanContext extractedContext = tracer.extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(httpRequest));
-    final Span span = tracer.buildSpan(httpRequest.getMethod())
+    final Span span = tracer.buildSpan(getSpanName(httpRequest))
       .asChildOf(extractedContext)
       .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
       .start();

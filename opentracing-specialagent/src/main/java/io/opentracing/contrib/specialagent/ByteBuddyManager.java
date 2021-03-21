@@ -63,25 +63,17 @@ public class ByteBuddyManager extends Manager {
 
   private TransformationListener transformationListener;
 
-  private AgentBuilder newBuilder(final Instrumentation inst, final PluginManifest pluginManifest, final Event[] events, boolean forRules) {
+  private AgentBuilder newBuilder(final Instrumentation inst, final PluginManifest pluginManifest, final Event[] events) {
     // Prepare the builder to be used to implement transformations in AgentRule(s)
     AgentBuilder agentBuilder = new Default(byteBuddy);
     if (Adapter.tracerClassLoader != null)
       agentBuilder = agentBuilder.ignore(any(), is(Adapter.tracerClassLoader));
 
-    if (forRules) {
-      agentBuilder = agentBuilder
-              .ignore(nameStartsWith("net.bytebuddy.")
-                      .or(nameStartsWith("sun.reflect."))
-                      .or(nameStartsWith("com.ibm."))
-                      .or(nameStartsWith("org.eclipse.osgi.framework"))
-                      .or(isSynthetic()), any(), any());
-    } else {
-      agentBuilder = agentBuilder
-              .ignore(nameStartsWith("net.bytebuddy.")
-                      .or(nameStartsWith("sun.reflect."))
-                      .or(isSynthetic()), any(), any());
-    }
+    // TODO: Refactor to how it looked originally, now that we have fixed the IBM bugs?
+    agentBuilder = agentBuilder
+            .ignore(nameStartsWith("net.bytebuddy.")
+                    .or(nameStartsWith("sun.reflect."))
+                    .or(isSynthetic()), any(), any());
 
     agentBuilder = agentBuilder
               .disableClassFormatChanges()
@@ -222,13 +214,13 @@ public class ByteBuddyManager extends Manager {
     loadedDefaultRules = true;
 
     // Load ClassLoaderAgent
-    ClassLoaderAgent.premain(newBuilder(null, null, null, false)).installOn(inst);
+    ClassLoaderAgent.premain(newBuilder(null, null, null)).installOn(inst);
 
-    // Additionally, load OsgiClassLoaderAgent to handle OSGi specific issues
-    OsgiClassLoaderAgent.premain(newBuilder(null, null, null, false)).installOn(inst);
+    // Additionally, load WebSphereClassLoaderAgent to handle IBM and OSGi specific issues
+    WebSphereClassLoaderAgent.premain(newBuilder(null, null, null)).installOn(inst);
 
     // Load TracerExclusionAgent
-    final AgentBuilder builder = TracerExclusionAgent.premain(tracerExcludedClasses, newBuilder(null, null, null, false));
+    final AgentBuilder builder = TracerExclusionAgent.premain(tracerExcludedClasses, newBuilder(null, null, null));
     if (builder != null)
       builder.installOn(inst);
   }
@@ -240,8 +232,8 @@ public class ByteBuddyManager extends Manager {
 
     boolean hasGlobal1 = false;
     boolean hasGlobal2 = false;
-    AgentBuilder chainedGlobalBuilder1 = newBuilder(inst, null, events, true);
-    AgentBuilder chainedGlobalBuilder2 = newBuilder(inst, null, events, true);
+    AgentBuilder chainedGlobalBuilder1 = newBuilder(inst, null, events);
+    AgentBuilder chainedGlobalBuilder2 = newBuilder(inst, null, events);
 
     // Load the rest of the specified rules
     if (integrationRules != null) {
@@ -250,12 +242,12 @@ public class ByteBuddyManager extends Manager {
         if (agentRules != null) {
           boolean hasLocal1 = false;
           boolean hasLocal2 = false;
-          AgentBuilder chainedLocalBuilder1 = newBuilder(inst, null, events, true);
-          AgentBuilder chainedLocalBuilder2 = newBuilder(inst, null, events, true);
+          AgentBuilder chainedLocalBuilder1 = newBuilder(inst, null, events);
+          AgentBuilder chainedLocalBuilder2 = newBuilder(inst, null, events);
           for (final AgentRule agentRule : agentRules) {
             loadedRules.add(agentRule.getClass().getName());
             try {
-              final AgentBuilder[] unchainedBuilders = agentRule.buildAgentUnchained(newBuilder(inst, integrationRule.getPluginManifest(), events, true));
+              final AgentBuilder[] unchainedBuilders = agentRule.buildAgentUnchained(newBuilder(inst, integrationRule.getPluginManifest(), events));
               if (unchainedBuilders != null)
                 for (final AgentBuilder unchainedBuilder : unchainedBuilders)
                   unchainedBuilder.installOn(inst);

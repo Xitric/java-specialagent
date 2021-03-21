@@ -27,8 +27,13 @@ public class StandardTagsServletFilterSpanDecorator implements ServletFilterSpan
       Tags.COMPONENT.set(span, "java-web-servlet");
 
       Tags.HTTP_METHOD.set(span, httpServletRequest.getMethod());
-      //without query params
-      Tags.HTTP_URL.set(span, httpServletRequest.getRequestURL().toString());
+
+      //Portlets in the WebSphere admin panel do not have a request URL, but are represented by their URI instead
+      if (httpServletRequest.getRequestURL() != null) {
+        Tags.HTTP_URL.set(span, httpServletRequest.getRequestURL().toString());
+      } else {
+        span.setTag("http.uri", httpServletRequest.getRequestURI());
+      }
     }
 
     @Override
