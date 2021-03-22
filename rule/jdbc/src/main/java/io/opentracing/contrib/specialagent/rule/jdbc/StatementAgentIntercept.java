@@ -83,7 +83,7 @@ public class StatementAgentIntercept {
 		}
 
 		// Check if we are still unwrapping nested calls before actually closing the span
-		if (context.decrementAndGet() >= 0) {
+		if (context.decrementAndGet() > 0) {
 			return;
 		}
 

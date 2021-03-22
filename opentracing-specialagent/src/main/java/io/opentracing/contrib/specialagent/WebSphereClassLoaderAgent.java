@@ -47,7 +47,7 @@ public class WebSphereClassLoaderAgent {
 															.and(takesArgument(0, String.class))
 															.and(takesArgument(1, named("boolean"))))
 													.and(returns(Class.class))
-                                                    .and(isProtected())
+													.and(isPublic().or(isProtected()))
 											)
 									);
 						}
