@@ -507,7 +507,7 @@
         </dependency>
         <dependency>
           <groupId>io.opentracing.contrib.specialagent.rule</groupId>
-          <artifactId>log4j</artifactId>
+          <artifactId>log4j-1.2</artifactId>
           <version>${project.version}</version>
           <optional>true</optional>
           <scope>provided</scope>

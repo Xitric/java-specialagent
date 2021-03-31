@@ -22,12 +22,13 @@
         <artifactId>rule</artifactId>
         <version>1.7.5-SNAPSHOT</version>
     </parent>
-    <artifactId>log4j</artifactId>
-    <name>SpecialAgent Rule for the Apache log4j</name>
+    <artifactId>log4j-1.2</artifactId>
+    <name>SpecialAgent Rule for the Apache Log4j 1.2</name>
     <properties>
-        <sa.rule.name>log4j</sa.rule.name>
-        <min.version>1.2.17</min.version>
-        <passCompatibility>org.apache:log4j:[${min.version},]</passCompatibility>
+        <sa.rule.name>log4j:1.2</sa.rule.name>
+        <min.version>1.2.4</min.version>
+        <max.version>1.2.17</max.version>
+        <passCompatibility>org.apache:log4j:[${min.version},${max.version}]</passCompatibility>
     </properties>
     <dependencies>
         <dependency>
@@ -38,7 +39,4 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
-
-
 </project>
