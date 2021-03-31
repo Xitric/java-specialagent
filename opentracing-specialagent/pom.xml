@@ -505,6 +505,13 @@
           <optional>true</optional>
           <scope>provided</scope>
         </dependency>
+        <dependency>
+          <groupId>io.opentracing.contrib.specialagent.rule</groupId>
+          <artifactId>log4j</artifactId>
+          <version>${project.version}</version>
+          <optional>true</optional>
+          <scope>provided</scope>
+        </dependency>
       </dependencies>
     </profile>
     <profile>
