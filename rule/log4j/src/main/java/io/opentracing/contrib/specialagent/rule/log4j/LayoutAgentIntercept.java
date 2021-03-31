@@ -8,6 +8,10 @@ public class LayoutAgentIntercept {
 
     public static Object onPatternParserExit(String pattern) {
 
+        if (!Log4jUtil.shouldLogSpanIDs()){
+            return new PatternParser(pattern);
+        }
+
         String traceIdReference = "{" + Log4jConstants.TRACE_ID + "}";
         String spanIdReference = "{" + Log4jConstants.SPAN_ID + "}";
 

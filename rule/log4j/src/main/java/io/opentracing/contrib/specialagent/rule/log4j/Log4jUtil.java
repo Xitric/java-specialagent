@@ -29,4 +29,26 @@ public class Log4jUtil {
         return trace;
     }
 
+    public static boolean shouldLogSpanIDs() {
+        String logProperty = System.getProperty(Log4jConstants.LOG_SPAN_IDS);
+
+        if (logProperty == null) {
+            return false;
+        }
+
+        return Log4jUtil.parseProperty(logProperty);
+    }
+
+    private static boolean parseProperty(String str) {
+        if (!(str == null || str.isEmpty())) {
+            if (str.equalsIgnoreCase("true")) {
+                return true;
+            }
+            if (str.equalsIgnoreCase("false")) {
+                return false;
+            }
+        }
+        throw new IllegalArgumentException("Bad input \"" + str + "\". Valid inputs are 'true' 'false'");
+    }
+
 }
