@@ -10,7 +10,7 @@ import net.bytebuddy.utility.JavaModule;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-public class LayoutAgentRule extends AgentRule {
+public class PatternLayoutAgentRule extends AgentRule {
 
     private static class PatternParserHandler {
 
@@ -21,7 +21,7 @@ public class LayoutAgentRule extends AgentRule {
                 final @Advice.Argument(value = 0) String pattern,
                 @Advice.Return(readOnly = false, typing = Assigner.Typing.DYNAMIC) Object patternParser) {
             if (isAllowed(className, origin)) {
-                patternParser = LayoutAgentIntercept.onPatternParserExit(pattern);
+                patternParser = PatternLayoutAgentIntercept.onPatternParserExit(pattern);
             }
         }
 

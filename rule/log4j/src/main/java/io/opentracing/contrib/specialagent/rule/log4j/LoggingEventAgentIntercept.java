@@ -8,7 +8,7 @@ import org.apache.log4j.MDC;
 
 import java.util.Hashtable;
 
-public class LogAgentIntercept {
+public class LoggingEventAgentIntercept {
 
     static final Tracer tracer = GlobalTracer.get();
 

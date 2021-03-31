@@ -12,7 +12,7 @@ import java.util.Hashtable;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-public class LogAgentRule extends AgentRule {
+public class LoggingEventAgentRule extends AgentRule {
 
     public static class MdcCopyHandler {
         @Advice.OnMethodEnter
@@ -23,7 +23,7 @@ public class LogAgentRule extends AgentRule {
                 @Advice.FieldValue(value = "mdcCopyLookupRequired", readOnly = false) boolean mdcCopyLookupRequired) {
             if (isAllowed(className, origin) && mdcCopyLookupRequired) {
                 mdcCopyLookupRequired = false;
-                mdcCopy = LogAgentIntercept.onMdcCopyEnter();
+                mdcCopy = LoggingEventAgentIntercept.onMdcCopyEnter();
             }
         }
 
@@ -38,7 +38,7 @@ public class LogAgentRule extends AgentRule {
                 final @Advice.Argument(0) String key,
                 @Advice.Return(readOnly = false) Object value) {
             if (isAllowed(className, origin)) {
-                value = LogAgentIntercept.onMdcExit(key, value);
+                value = LoggingEventAgentIntercept.onMdcExit(key, value);
             }
         }
     }

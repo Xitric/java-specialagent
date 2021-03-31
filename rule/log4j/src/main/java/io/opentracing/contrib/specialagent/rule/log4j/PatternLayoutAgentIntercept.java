@@ -4,7 +4,7 @@ import org.apache.log4j.helpers.PatternParser;
 
 import java.text.MessageFormat;
 
-public class LayoutAgentIntercept {
+public class PatternLayoutAgentIntercept {
 
     public static Object onPatternParserExit(String pattern) {
 

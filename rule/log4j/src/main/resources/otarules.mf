@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-io.opentracing.contrib.specialagent.rule.log4j.LayoutAgentRule
-io.opentracing.contrib.specialagent.rule.log4j.LogAgentRule
+io.opentracing.contrib.specialagent.rule.log4j.PatternLayoutAgentRule
+io.opentracing.contrib.specialagent.rule.log4j.LoggingEventAgentRule
