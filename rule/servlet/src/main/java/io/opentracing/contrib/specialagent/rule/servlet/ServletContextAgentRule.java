@@ -43,7 +43,10 @@ public class ServletContextAgentRule extends AgentRule {
         // Similarly, ApplicationContextFacade causes trouble and it's enough to instrument ApplicationContext
         .and(not(named("org.apache.catalina.core.ApplicationContextFacade")))
         // Otherwise we are breaking Tomcat 8.5+
-        .and(not(named("org.apache.catalina.core.StandardContext$NoPluggabilityServletContext")))))
+        .and(not(named("org.apache.catalina.core.StandardContext$NoPluggabilityServletContext")))
+        // Otherwise we are breaking the IBM WebApp class because initialization of its protected config field is
+        // deferred
+        .and(not(nameStartsWith("com.ibm.ws.webcontainer.webapp.WebApp")))))
       .transform(new Transformer() {
         @Override
         public Builder<?> transform(final Builder<?> builder, final TypeDescription typeDescription, final ClassLoader classLoader, final JavaModule module) {

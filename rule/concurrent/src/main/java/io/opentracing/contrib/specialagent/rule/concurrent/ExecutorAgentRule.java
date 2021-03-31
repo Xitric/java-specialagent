@@ -44,6 +44,7 @@ public class ExecutorAgentRule extends AgentRule {
   public AgentBuilder buildAgentChainedGlobal1(final AgentBuilder builder) {
     return builder
       .type(not(isInterface()).and(isSubTypeOf(Executor.class)))
+      .and(not(nameStartsWith("com.ibm.ejs.util.am.AlarmManagerCSLM")))
       .transform(transformer);
   }
 
