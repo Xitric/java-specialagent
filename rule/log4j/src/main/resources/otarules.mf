@@ -13,3 +13,4 @@
 # limitations under the License.
 
 io.opentracing.contrib.specialagent.rule.log4j.LayoutAgentRule
+io.opentracing.contrib.specialagent.rule.log4j.LogAgentRule
