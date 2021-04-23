@@ -98,6 +98,7 @@
         <module>dynamic</module>
         <module>cxf</module>
         <module>quartz</module>
+        <module>myfaces-1.2</module>
       </modules>
       <build>
         <resources>
