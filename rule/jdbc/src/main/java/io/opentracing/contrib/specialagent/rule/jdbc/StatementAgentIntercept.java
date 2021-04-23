@@ -33,7 +33,7 @@ public class StatementAgentIntercept {
 	 * to extract the name from inside the statement object, and in the worst case fall back to a default name.
 	 *
 	 * @param thiz The instrumented statement object
-	 * @param sql The sql string that was used in this call, may be {@code null} for prepared and batch queries
+	 * @param sql  The sql string that was used in this call, may be {@code null} for prepared and batch queries
 	 * @return The best effort proposal for naming this span
 	 */
 	public static String getSpanName(final Object thiz, final Object sql) {
@@ -55,7 +55,7 @@ public class StatementAgentIntercept {
 	 * span associated with a database query.
 	 *
 	 * @param thiz The instrumented statement object
-	 * @param sql The sql string that was used in this call, may be {@code null} for prepared and batch queries
+	 * @param sql  The sql string that was used in this call, may be {@code null} for prepared and batch queries
 	 */
 	public static void onExecuteEnter(final Object thiz, final Object sql) {
 		LocalSpanContext context = LocalSpanContext.get(JdbcConstants.COMPONENT_NAME);

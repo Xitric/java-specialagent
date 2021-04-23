@@ -44,7 +44,7 @@ public class HttpHeaderTagParser {
       else
         tag = headerTag[1];
 
-      logger.info("http header tag: " + header + "=" + tag);
+      logger.finest("http header tag: " + header + "=" + tag);
       result.add(new ServletFilterHeaderSpanDecorator.HeaderEntry(header, tag));
     }
 
