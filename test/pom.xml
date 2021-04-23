@@ -96,6 +96,7 @@
     <module>thrift</module>
     <module>twilio</module>
     <module>zuul</module>
+    <module>log4j-1.2</module>
   </modules>
   <profiles>
     <profile>

@@ -99,6 +99,7 @@
         <module>cxf</module>
         <module>quartz</module>
         <module>myfaces-1.2</module>
+        <module>log4j</module>
       </modules>
       <build>
         <resources>

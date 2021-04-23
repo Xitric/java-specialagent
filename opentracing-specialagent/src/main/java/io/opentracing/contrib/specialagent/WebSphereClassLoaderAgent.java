@@ -73,6 +73,10 @@ public class WebSphereClassLoaderAgent {
 				return;
 			}
 
+			if (result != null) {
+				return;
+			}
+
 			// Some classloaders do not propagate to their parent, so we attempt to resolve the lookup using the boot
 			// loader
 			try {
