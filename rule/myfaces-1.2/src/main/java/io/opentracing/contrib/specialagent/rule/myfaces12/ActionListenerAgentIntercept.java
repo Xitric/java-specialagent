@@ -23,31 +23,72 @@ import io.opentracing.contrib.specialagent.OpenTracingApiUtil;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 
+import javax.el.ELContext;
+import javax.el.MethodExpression;
+import javax.faces.component.ActionSource2;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 
 public class ActionListenerAgentIntercept {
 
 	static final Tracer tracer = GlobalTracer.get();
 
-	public static String getSpanName(final Object thiz) {
-		return thiz.getClass().getName() + "#processAction";
+	private static Tracer.SpanBuilder makeSpan(final Object thiz, final ActionEvent event) {
+		Tracer.SpanBuilder builder = null;
+
+		ELContext context = FacesContext.getCurrentInstance().getELContext();
+		if (context != null) {
+			if (event != null && event.getComponent() instanceof ActionSource2) {
+				ActionSource2 actionSource = (ActionSource2) event.getComponent();
+				MethodExpression expression = actionSource.getActionExpression();
+				if (expression != null) {
+					String expString = expression.getExpressionString();
+					builder = tracer.buildSpan(expString)
+							.withTag("code.function", expString);
+				}
+			}
+		}
+
+		if (builder == null) {
+			builder = tracer.buildSpan("processAction")
+					.withTag("code.function", "processAction()");
+		}
+
+		if (event != null) {
+			builder.withTag("code.ui_component", event.getComponent().getClass().getName())
+					.withTag("code.ui_component_id", event.getComponent().getId());
+		}
+
+		return builder.withTag(Tags.COMPONENT.getKey(), MyFacesConstants.COMPONENT_NAME)
+				.withTag("code.namespace", thiz.getClass().getName());
 	}
 
-	public static void onProcessActionEnter(final Object thiz, final Object e) {
-		ActionEvent event = (ActionEvent) e;
-		final Span span = tracer.buildSpan(getSpanName(thiz))
-				.withTag(Tags.COMPONENT.getKey(), MyFacesConstants.COMPONENT_NAME)
-				.withTag("class", thiz.getClass().getName())
-				.withTag(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER)
-				.start();
+	public static void onProcessActionEnter(final Object thiz, final Object evt) {
+		ActionEvent event = (ActionEvent) evt;
+
+		LocalSpanContext context = LocalSpanContext.get(MyFacesConstants.KEY_ACTION_LISTENER);
+		// If a span has already been activated in a different execute method, we suppress nested creations in this
+		// thread
+		if (context != null) {
+			context.increment();
+			context.getSpan().setTag("code.namespace", thiz.getClass().getName());
+			return;
+		}
+
+		final Span span = makeSpan(thiz, event).start();
 
 		final Scope scope = tracer.activateSpan(span);
-		LocalSpanContext.set(MyFacesConstants.COMPONENT_NAME, span, scope);
+		LocalSpanContext.set(MyFacesConstants.KEY_ACTION_LISTENER, span, scope);
 	}
 
 	public static void onProcessActionExit(final Throwable thrown) {
-		final LocalSpanContext context = LocalSpanContext.get(MyFacesConstants.COMPONENT_NAME);
+		final LocalSpanContext context = LocalSpanContext.get(MyFacesConstants.KEY_ACTION_LISTENER);
 		if (context == null) {
+			return;
+		}
+
+		// Check if we are still unwrapping nested calls before actually closing the span
+		if (context.decrementAndGet() > 0) {
 			return;
 		}
 

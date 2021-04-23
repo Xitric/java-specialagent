@@ -30,7 +30,8 @@
     <version.myfaces.min>1.2.0</version.myfaces.min>
     <version.myfaces.max>2.6.7</version.myfaces.max>
     <version.servlet.min>2.2</version.servlet.min>
-    <passCompatibility>org.apache.myfaces.core:myfaces-impl:[${version.myfaces.min},${version.myfaces.max}];javax.servlet:javax.servlet-api:[3.0.1,];javax.servlet:servlet-api:[${version.servlet.min},]</passCompatibility>
+    <version.javax.el.min>2.2.1</version.javax.el.min>
+    <passCompatibility>org.apache.myfaces.core:myfaces-impl:[${version.myfaces.min},${version.myfaces.max}];javax.servlet:javax.servlet-api:[3.0.1,];javax.servlet:servlet-api:[${version.servlet.min},];javax.el:javax.el-api:[2.2.1,]</passCompatibility>
   </properties>
   <dependencies>
     <dependency>
@@ -51,6 +52,12 @@
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <version>${version.servlet.min}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.el</groupId>
+      <artifactId>javax.el-api</artifactId>
+      <version>${version.javax.el.min}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

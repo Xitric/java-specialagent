@@ -18,4 +18,6 @@ package io.opentracing.contrib.specialagent.rule.myfaces12;
 public interface MyFacesConstants {
 
 	String COMPONENT_NAME = "java-server-faces";
+	String KEY_LIFECYCLE = "java-server-faces-lifecycle";
+	String KEY_ACTION_LISTENER = "java-server-faces-action-listener";
 }

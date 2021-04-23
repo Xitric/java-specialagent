@@ -13,4 +13,4 @@
 # limitations under the License.
 
 io.opentracing.contrib.specialagent.rule.myfaces12.ActionListenerAgentRule
-io.opentracing.contrib.specialagent.rule.myfaces12.RestoreViewAgentRule
+io.opentracing.contrib.specialagent.rule.myfaces12.PhaseExecutorAgentRule
